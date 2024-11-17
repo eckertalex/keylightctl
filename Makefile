@@ -52,11 +52,11 @@ tidy:
 ## build/keylight: build the cmd/keylight application
 .PHONY: build/keylight
 build/keylight:
-	@go build -v -ldflags "$(LDFLAGS)" -o=./tmp/keylight ./cmd/keylight
+	@go build -v -ldflags "$(LDFLAGS)" -o=./keylight ./main.go
 
 ## run/keylight: run the cmd/keylight application
 .PHONY: run/keylight
 run/keylight: build/keylight
-	@./tmp/keylight
+	@./keylight
 
 # vim: set tabstop=4 shiftwidth=4 noexpandtab
