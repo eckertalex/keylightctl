@@ -21,7 +21,8 @@ Configure your lights in a $HOME/.keylight.toml file and use keylight to manage 
 	}
 )
 
-func Execute() {
+func Execute(version string) {
+	rootCmd.Version = version
 	cobra.CheckErr(rootCmd.Execute())
 }
 
