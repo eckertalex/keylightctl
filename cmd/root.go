@@ -14,10 +14,6 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "keylight",
 		Short: "A CLI to manage your Elgato Key Light Air",
-		Long: `keylight is a simple and efficient CLI tool to control your Elgato Key Light Air.
-It provides commands to check the light status, turn it on or off, and adjust settings like brightness and temperature.
-
-Configure your lights in a $HOME/.keylight.toml file and use keylight to manage them from the terminal.`,
 	}
 )
 
