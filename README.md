@@ -1,6 +1,6 @@
-# keylight
+# keylightctl
 
-`keylight` is a CLI tool for managing your Elgato Key Light Air. It allows you to control your lights directly from the terminal by configuring settings in a simple TOML file. With `keylight`, you can easily get the status, turn the lights on/off, and adjust brightness and temperature.
+`keylightctl` is a CLI tool for managing your Elgato Key Light Air. It allows you to control your lights directly from the terminal by configuring settings in a simple TOML file. With `keylightctl`, you can easily get the status, turn the lights on/off, and adjust brightness and temperature.
 
 ## Features
 
@@ -11,7 +11,7 @@
 
 ## Configuration
 
-`keylight` uses a configuration file located at `$HOME/.keylight.toml`. Here’s an example configuration:
+`keylightctl` uses a configuration file located at `$HOME/.keylightctl.toml`. Here’s an example configuration:
 
 ```toml
 [[lights]]
@@ -30,19 +30,19 @@ ip = "192.168.2.165:9123"
 - Get Status:
 
 ```sh
-keylight status
+keylightctl status
 ```
 
 - Turn On:
 
 ```sh
-keylight on
+keylightctl on
 ```
 
 - Turn Off:
 
 ```sh
-keylight off
+keylightctl off
 ```
 
 - Help
@@ -50,5 +50,5 @@ keylight off
 For a full list of commands and options:
 
 ```sh
-keylight --help
+keylightctl --help
 ```

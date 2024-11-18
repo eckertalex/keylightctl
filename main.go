@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/eckertalex/keylight/cmd"
+	"github.com/eckertalex/keylightctl/cmd"
 )
 
 var Version = "v0.0.0"

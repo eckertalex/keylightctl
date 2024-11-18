@@ -7,7 +7,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/eckertalex/keylight/internal/api"
+	"github.com/eckertalex/keylightctl/internal/api"
 )
 
 type Light struct {

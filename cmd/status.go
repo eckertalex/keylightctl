@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/eckertalex/keylight/internal/services"
+	"github.com/eckertalex/keylightctl/internal/services"
 	"github.com/spf13/cobra"
 )
 

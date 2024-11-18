@@ -49,14 +49,14 @@ tidy:
 	go mod tidy
 	go fmt ./...
 
-## build/keylight: build the cmd/keylight application
-.PHONY: build/keylight
-build/keylight:
-	@go build -v -ldflags "$(LDFLAGS)" -o=./keylight ./main.go
+## build/keylightctl: build the cmd/keylightctl application
+.PHONY: build/keylightctl
+build/keylightctl:
+	@go build -v -ldflags "$(LDFLAGS)" -o=./keylightctl ./main.go
 
-## run/keylight: run the cmd/keylight application
-.PHONY: run/keylight
-run/keylight: build/keylight
-	@./keylight
+## run/keylightctl: run the cmd/keylightctl application
+.PHONY: run/keylightctl
+run/keylightctl: build/keylightctl
+	@./keylightctl
 
 # vim: set tabstop=4 shiftwidth=4 noexpandtab

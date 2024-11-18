@@ -1,4 +1,4 @@
-module github.com/eckertalex/keylight
+module github.com/eckertalex/keylightctl
 
 go 1.23.2
 

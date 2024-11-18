@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eckertalex/keylight/internal/services"
+	"github.com/eckertalex/keylightctl/internal/services"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -12,7 +12,7 @@ import (
 var (
 	cfgFile string
 	rootCmd = &cobra.Command{
-		Use:   "keylight",
+		Use:   "keylightctl",
 		Short: "A CLI to manage your Elgato Key Light Air",
 	}
 )
@@ -25,7 +25,7 @@ func Execute(version string) {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.keylight.toml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.keylightctl.toml)")
 }
 
 func initConfig() {
@@ -37,7 +37,7 @@ func initConfig() {
 
 		viper.AddConfigPath(home)
 		viper.SetConfigType("toml")
-		viper.SetConfigName(".keylight")
+		viper.SetConfigName(".keylightctl")
 	}
 
 	viper.AutomaticEnv()
