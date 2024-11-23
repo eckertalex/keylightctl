@@ -1,19 +1,52 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/eckertalex/keylightctl/internal/api"
 	"github.com/eckertalex/keylightctl/internal/services"
+	"github.com/eckertalex/keylightctl/internal/utils"
 	"github.com/spf13/cobra"
+)
+
+var (
+	brightness  *int
+	temperature *int
 )
 
 var onCmd = &cobra.Command{
 	Use:   "on",
 	Short: "Turn on the lights",
 	Run: func(cmd *cobra.Command, args []string) {
-		services.UpdateLightsSettings(Lights, api.LightDetail{On: 1})
+		settings := api.LightDetail{
+			On: 1,
+		}
+
+		if cmd.Flags().Changed("brightness") {
+			if err := utils.ValidateBrightness(*brightness); err != nil {
+				fmt.Printf("Invalid brightness: %v\n", err)
+				return
+			}
+			settings.Brightness = *brightness
+		}
+
+		if cmd.Flags().Changed("temperature") {
+			if err := utils.ValidateTemperature(*temperature); err != nil {
+				fmt.Printf("Invalid temperature: %v\n", err)
+				return
+			}
+			settings.Temperature = utils.KelvinToMired(*temperature)
+		}
+
+		services.UpdateLightsSettings(Lights, settings)
 	},
 }
 
 func init() {
+	brightness = new(int)
+	temperature = new(int)
+
+	onCmd.Flags().IntVarP(brightness, "brightness", "b", 0, "Brightness percentage (0-100)")
+	onCmd.Flags().IntVarP(temperature, "temperature", "t", 0, "Color temperature in Kelvin (2900-7000)")
 	rootCmd.AddCommand(onCmd)
 }

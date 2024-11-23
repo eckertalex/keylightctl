@@ -1,11 +1,11 @@
-package services
+package utils
 
 import (
 	"fmt"
 	"time"
 )
 
-func spinner(done <-chan struct{}) {
+func Spinner(done <-chan struct{}) {
 	frames := []string{"|", "/", "-", "\\"}
 	i := 0
 	for {

@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"sync"
 
 	"github.com/eckertalex/keylightctl/internal/api"
+	"github.com/eckertalex/keylightctl/internal/utils"
 )
 
 type Light struct {
@@ -24,7 +26,7 @@ func GetLightsSettings(lights []Light) {
 	}, len(lights))
 
 	done := make(chan struct{})
-	go spinner(done)
+	go utils.Spinner(done)
 
 	for _, light := range lights {
 		wg.Add(1)
@@ -66,7 +68,7 @@ func GetLightsSettings(lights []Light) {
 			fmt.Printf("  Power: %s\n", formatOnOff(light.On))
 			fmt.Printf("  Brightness: %d%%\n", light.Brightness)
 			fmt.Printf("  Temperature: %dK (mired: %d)\n",
-				miredToKelvin(light.Temperature),
+				utils.MiredToKelvin(light.Temperature),
 				light.Temperature)
 		}
 	}
@@ -81,7 +83,7 @@ func UpdateLightsSettings(lights []Light, settings api.LightDetail) {
 	}, len(lights))
 
 	done := make(chan struct{})
-	go spinner(done)
+	go utils.Spinner(done)
 
 	for _, light := range lights {
 		wg.Add(1)
@@ -123,8 +125,20 @@ func UpdateLightsSettings(lights []Light, settings api.LightDetail) {
 			fmt.Printf("  Power: %s\n", formatOnOff(light.On))
 			fmt.Printf("  Brightness: %d%%\n", light.Brightness)
 			fmt.Printf("  Temperature: %dK (mired: %d)\n",
-				miredToKelvin(light.Temperature),
+				utils.MiredToKelvin(light.Temperature),
 				light.Temperature)
 		}
 	}
+}
+
+func isConnectionError(err error) bool {
+	var netErr *net.OpError
+	return errors.As(err, &netErr)
+}
+
+func formatOnOff(on int) string {
+	if on == 1 {
+		return "ON"
+	}
+	return "OFF"
 }
