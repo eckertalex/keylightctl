@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	Lights  []services.Light
 	cfgFile string
 	rootCmd = &cobra.Command{
 		Use:   "keylightctl",
@@ -47,7 +48,7 @@ func initConfig() {
 		os.Exit(1)
 	}
 
-	if err := viper.UnmarshalKey("lights", &services.Lights); err != nil {
+	if err := viper.UnmarshalKey("lights", &Lights); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to unmarshal lights: %v\n", err)
 		os.Exit(1)
 	}

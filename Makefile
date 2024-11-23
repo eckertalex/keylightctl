@@ -52,7 +52,7 @@ tidy:
 ## build/keylightctl: build the cmd/keylightctl application
 .PHONY: build/keylightctl
 build/keylightctl:
-	@go build -v -ldflags "$(LDFLAGS)" -o=./keylightctl ./main.go
+	@go build -v -ldflags "$(LDFLAGS)" -o=./keylightctl ./main.go 2>/dev/null
 
 ## run/keylightctl: run the cmd/keylightctl application
 .PHONY: run/keylightctl

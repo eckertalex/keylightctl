@@ -15,20 +15,18 @@ type Light struct {
 	IP   string
 }
 
-var Lights []Light
-
-func GetLightsSettings() {
+func GetLightsSettings(lights []Light) {
 	var wg sync.WaitGroup
 	results := make(chan struct {
 		err    error
 		status *api.LightStatus
 		name   string
-	}, len(Lights))
+	}, len(lights))
 
 	done := make(chan struct{})
 	go spinner(done)
 
-	for _, light := range Lights {
+	for _, light := range lights {
 		wg.Add(1)
 		go func(light Light) {
 			defer wg.Done()
@@ -74,18 +72,18 @@ func GetLightsSettings() {
 	}
 }
 
-func UpdateLightsSettings(settings api.LightDetail) {
+func UpdateLightsSettings(lights []Light, settings api.LightDetail) {
 	var wg sync.WaitGroup
 	results := make(chan struct {
 		err    error
 		status *api.LightStatus
 		name   string
-	}, len(Lights))
+	}, len(lights))
 
 	done := make(chan struct{})
 	go spinner(done)
 
-	for _, light := range Lights {
+	for _, light := range lights {
 		wg.Add(1)
 		go func(light Light) {
 			defer wg.Done()
