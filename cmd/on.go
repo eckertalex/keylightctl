@@ -10,43 +10,57 @@ import (
 )
 
 var (
-	brightness  *int
-	temperature *int
+	onBrightness  *int
+	onTemperature *int
+	onLightName   string
+	onCmd         = &cobra.Command{
+		Use:   "on",
+		Short: "Turn on the lights",
+		Run: func(cmd *cobra.Command, args []string) {
+			settings := api.LightDetail{
+				On: 1,
+			}
+
+			if cmd.Flags().Changed("brightness") {
+				if err := utils.ValidateBrightness(*onBrightness); err != nil {
+					fmt.Printf("Invalid brightness: %v\n", err)
+					return
+				}
+				settings.Brightness = *onBrightness
+			}
+
+			if cmd.Flags().Changed("temperature") {
+				if err := utils.ValidateTemperature(*onTemperature); err != nil {
+					fmt.Printf("Invalid temperature: %v\n", err)
+					return
+				}
+				settings.Temperature = utils.KelvinToMired(*onTemperature)
+			}
+
+			if onLightName != "" {
+				light := services.FindLightByName(lights, onLightName)
+
+				if light == nil {
+					availableLights := services.GetAvailableLightNames(lights)
+					fmt.Printf("Light with name '%s' not found. Available lights: %s\n", onLightName, availableLights)
+					return
+				}
+
+				services.UpdateLightsSettings([]services.Light{*light}, settings)
+				return
+			}
+
+			services.UpdateLightsSettings(lights, settings)
+		},
+	}
 )
 
-var onCmd = &cobra.Command{
-	Use:   "on",
-	Short: "Turn on the lights",
-	Run: func(cmd *cobra.Command, args []string) {
-		settings := api.LightDetail{
-			On: 1,
-		}
-
-		if cmd.Flags().Changed("brightness") {
-			if err := utils.ValidateBrightness(*brightness); err != nil {
-				fmt.Printf("Invalid brightness: %v\n", err)
-				return
-			}
-			settings.Brightness = *brightness
-		}
-
-		if cmd.Flags().Changed("temperature") {
-			if err := utils.ValidateTemperature(*temperature); err != nil {
-				fmt.Printf("Invalid temperature: %v\n", err)
-				return
-			}
-			settings.Temperature = utils.KelvinToMired(*temperature)
-		}
-
-		services.UpdateLightsSettings(Lights, settings)
-	},
-}
-
 func init() {
-	brightness = new(int)
-	temperature = new(int)
+	onBrightness = new(int)
+	onTemperature = new(int)
 
-	onCmd.Flags().IntVarP(brightness, "brightness", "b", 0, "Brightness percentage (0-100)")
-	onCmd.Flags().IntVarP(temperature, "temperature", "t", 0, "Color temperature in Kelvin (2900-7000)")
+	onCmd.Flags().IntVarP(onBrightness, "brightness", "b", 0, "Brightness percentage (0-100)")
+	onCmd.Flags().IntVarP(onTemperature, "temperature", "t", 0, "Color temperature in Kelvin (2900-7000)")
+	onCmd.Flags().StringVarP(&onLightName, "light", "l", "", "Specify the light name")
 	rootCmd.AddCommand(onCmd)
 }

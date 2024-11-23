@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"sync"
 
 	"github.com/eckertalex/keylightctl/internal/api"
@@ -15,6 +16,23 @@ import (
 type Light struct {
 	Name string
 	IP   string
+}
+
+func FindLightByName(lights []Light, name string) *Light {
+	for i := range lights {
+		if lights[i].Name == name {
+			return &lights[i]
+		}
+	}
+	return nil
+}
+
+func GetAvailableLightNames(lights []Light) string {
+	var names []string
+	for _, light := range lights {
+		names = append(names, light.Name)
+	}
+	return strings.Join(names, ", ")
 }
 
 func GetLightsSettings(lights []Light) {
