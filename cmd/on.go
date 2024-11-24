@@ -38,18 +38,20 @@ var (
 			}
 
 			if onLightName != "" {
-				light := services.FindLightByName(lights, onLightName)
+				lightConfig := services.FindLightByName(lightsConfig, onLightName)
 
-				if light == nil {
-					availableLights := services.GetAvailableLightNames(lights)
+				if lightConfig == nil {
+					availableLights := services.GetAvailableLightNames(lightsConfig)
 					fmt.Printf("Light with name '%s' not found. Available lights: %s\n", onLightName, availableLights)
 					return
 				}
 
-				services.UpdateLightsSettings([]services.Light{*light}, settings)
+				lights := services.ToLights([]services.LightConfig{*lightConfig})
+				services.UpdateLightsSettings(lights, settings)
 				return
 			}
 
+			lights := services.ToLights(lightsConfig)
 			services.UpdateLightsSettings(lights, settings)
 		},
 	}

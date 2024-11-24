@@ -15,18 +15,20 @@ var (
 		Short: "Turn off the lights",
 		Run: func(cmd *cobra.Command, args []string) {
 			if offLightName != "" {
-				light := services.FindLightByName(lights, offLightName)
+				lightConfig := services.FindLightByName(lightsConfig, offLightName)
 
-				if light == nil {
-					availableLights := services.GetAvailableLightNames(lights)
+				if lightConfig == nil {
+					availableLights := services.GetAvailableLightNames(lightsConfig)
 					fmt.Printf("Light with name '%s' not found. Available lights: %s\n", offLightName, availableLights)
 					return
 				}
 
-				services.UpdateLightsSettings([]services.Light{*light}, api.LightDetail{On: 0})
+				lights := services.ToLights([]services.LightConfig{*lightConfig})
+				services.UpdateLightsSettings(lights, api.LightDetail{On: 0})
 				return
 			}
 
+			lights := services.ToLights(lightsConfig)
 			services.UpdateLightsSettings(lights, api.LightDetail{On: 0})
 		},
 	}

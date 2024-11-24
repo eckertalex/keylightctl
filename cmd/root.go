@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	lights  []services.Light
-	cfgFile string
-	rootCmd = &cobra.Command{
+	lightsConfig []services.LightConfig
+	cfgFile      string
+	rootCmd      = &cobra.Command{
 		Use:   "keylightctl",
 		Short: "A CLI to manage your Elgato Key Light Air",
 	}
@@ -48,7 +48,7 @@ func initConfig() {
 		os.Exit(1)
 	}
 
-	if err := viper.UnmarshalKey("lights", &lights); err != nil {
+	if err := viper.UnmarshalKey("lights", &lightsConfig); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to unmarshal lights: %v\n", err)
 		os.Exit(1)
 	}

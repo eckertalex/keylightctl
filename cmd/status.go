@@ -14,18 +14,20 @@ var (
 		Short: "Get the current status of all configured lights",
 		Run: func(cmd *cobra.Command, args []string) {
 			if statusLightName != "" {
-				light := services.FindLightByName(lights, statusLightName)
+				lightConfig := services.FindLightByName(lightsConfig, statusLightName)
 
-				if light == nil {
-					availableLights := services.GetAvailableLightNames(lights)
+				if lightConfig == nil {
+					availableLights := services.GetAvailableLightNames(lightsConfig)
 					fmt.Printf("Light with name '%s' not found. Available lights: %s\n", statusLightName, availableLights)
 					return
 				}
 
-				services.GetLightsSettings([]services.Light{*light})
+				lights := services.ToLights([]services.LightConfig{*lightConfig})
+				services.GetLightsSettings(lights)
 				return
 			}
 
+			lights := services.ToLights(lightsConfig)
 			services.GetLightsSettings(lights)
 		},
 	}
