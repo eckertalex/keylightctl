@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eckertalex/keylightctl/internal/services"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	lightsConfig []services.LightConfig
+	lightsConfig []LightConfig
 	cfgFile      string
 	rootCmd      = &cobra.Command{
 		Use:   "keylightctl",
