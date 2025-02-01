@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/eckertalex/keylightctl/internal/keylight"
 	"github.com/spf13/cobra"
 )
 
@@ -22,12 +23,12 @@ var (
 				}
 
 				lights := ToLights([]LightConfig{*lightConfig})
-				UpdateLightsSettings(lights, LightDetail{On: 0})
+				UpdateLightsSettings(lights, keylight.LightDetail{On: 0})
 				return
 			}
 
 			lights := ToLights(lightsConfig)
-			UpdateLightsSettings(lights, LightDetail{On: 0})
+			UpdateLightsSettings(lights, keylight.LightDetail{On: 0})
 		},
 	}
 )

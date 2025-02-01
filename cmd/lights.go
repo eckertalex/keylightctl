@@ -1,97 +1,17 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/eckertalex/keylightctl/internal/keylight"
 )
-
-type LightDetail struct {
-	On          int `json:"on"`
-	Brightness  int `json:"brightness,omitempty"`
-	Temperature int `json:"temperature,omitempty"`
-}
-
-type LightStatus struct {
-	Lights         []LightDetail `json:"lights,omitempty"`
-	NumberOfLights int           `json:"numberOfLights,omitempty"`
-}
-
-var httpClient = &http.Client{
-	Timeout: 3 * time.Second,
-}
-
-func getLightsURL(ip string) string {
-	return fmt.Sprintf("http://%s/elgato/lights", ip)
-}
-
-func GetLightSettings(ip string) (*LightStatus, error) {
-	resp, err := httpClient.Get(getLightsURL(ip))
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("reading response failed: %w", err)
-	}
-
-	var status LightStatus
-	if err := json.Unmarshal(body, &status); err != nil {
-		return nil, fmt.Errorf("parsing response failed: %w", err)
-	}
-
-	return &status, nil
-}
-
-func UpdateLightSettings(ip string, settings LightDetail) (*LightStatus, error) {
-	payload := LightStatus{
-		Lights: []LightDetail{settings},
-	}
-
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	req, err := http.NewRequest(http.MethodPut, getLightsURL(ip), bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(body))
-	}
-	if err != nil {
-		return nil, fmt.Errorf("reading response failed: %w", err)
-	}
-
-	var status LightStatus
-	if err := json.Unmarshal(body, &status); err != nil {
-		return nil, fmt.Errorf("parsing response failed: %w", err)
-	}
-
-	return &status, nil
-}
 
 func Spinner(done <-chan struct{}) {
 	frames := []string{"|", "/", "-", "\\"}
@@ -147,13 +67,13 @@ type LightConfig struct {
 	Light `mapstructure:",squash"`
 }
 
-type lightOperation func(ip string) (*LightStatus, error)
+type lightOperation func(ip string) (*keylight.LightStatus, error)
 
 func processLightOperation(lights []Light, operation lightOperation, operationName string) {
 	var wg sync.WaitGroup
 	results := make(chan struct {
 		err    error
-		status *LightStatus
+		status *keylight.LightStatus
 		name   string
 	}, len(lights))
 
@@ -167,7 +87,7 @@ func processLightOperation(lights []Light, operation lightOperation, operationNa
 			status, err := operation(light.IP)
 			results <- struct {
 				err    error
-				status *LightStatus
+				status *keylight.LightStatus
 				name   string
 			}{err, status, light.Name}
 		}(light)
@@ -219,12 +139,14 @@ func formatOnOff(on int) string {
 }
 
 func GetLightsSettings(lights []Light) {
-	processLightOperation(lights, GetLightSettings, "Status")
+	controller := keylight.NewController()
+	processLightOperation(lights, controller.GetLight, "Status")
 }
 
-func UpdateLightsSettings(lights []Light, settings LightDetail) {
-	updateOperation := func(ip string) (*LightStatus, error) {
-		return UpdateLightSettings(ip, settings)
+func UpdateLightsSettings(lights []Light, settings keylight.LightDetail) {
+	controller := keylight.NewController()
+	updateOperation := func(ip string) (*keylight.LightStatus, error) {
+		return controller.UpdateLight(ip, settings)
 	}
 	processLightOperation(lights, updateOperation, "Update")
 }

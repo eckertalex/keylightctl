@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/eckertalex/keylightctl/internal/keylight"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +15,7 @@ var (
 		Use:   "on",
 		Short: "Turn on the lights",
 		Run: func(cmd *cobra.Command, args []string) {
-			settings := LightDetail{
+			settings := keylight.LightDetail{
 				On: 1,
 			}
 
