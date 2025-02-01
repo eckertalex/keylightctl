@@ -5,26 +5,74 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var (
-	lightOnStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
-	lightOffStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
-)
-
 func (m Model) View() string {
-	var lightStatus string
-	var lightStyle lipgloss.Style
-	if m.lightOn {
-		lightStatus = "On"
-		lightStyle = lightOnStyle
-	} else {
-		lightStatus = "Off"
-		lightStyle = lightOffStyle
+	var s string
+
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("205"))
+	header := titleStyle.Render("KeyLight TUI - Full Screen")
+	globalStatus := fmt.Sprintf("Global Power: %v (toggle with 'g')", m.GlobalOn)
+	headerBlock := header + "\n" + globalStatus + "\n\n"
+
+	var body string
+	for i, light := range m.Lights {
+		baseCardStyle := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			Padding(1, 2).
+			Margin(1)
+
+		var dynamicStyle lipgloss.Style
+		if light.On {
+			dynamicStyle = baseCardStyle.BorderForeground(lipgloss.Color("2"))
+		} else {
+			dynamicStyle = baseCardStyle.BorderForeground(lipgloss.Color("240"))
+		}
+
+		onStatus := "OFF"
+		if light.On {
+			onStatus = "ON"
+		}
+		lightHeader := fmt.Sprintf("%s [%s]", light.Name, onStatus)
+		brightnessRatio := float64(light.Brightness) / 100.0
+		tempRatio := float64(light.Temperature-2900) / float64(7000-2900)
+		brightnessBarStr := m.brightnessBar.ViewAs(brightnessRatio)
+		temperatureBarStr := m.temperatureBar.ViewAs(tempRatio)
+		brightnessText := fmt.Sprintf("Brightness: %d%%   %s", light.Brightness, brightnessBarStr)
+		temperatureText := fmt.Sprintf("Temp: %dK   %s", light.Temperature, temperatureBarStr)
+		bodyBlock := lipgloss.JoinVertical(lipgloss.Left, lightHeader, brightnessText, temperatureText)
+
+		if i == m.Cursor {
+			dynamicStyle = dynamicStyle.BorderStyle(lipgloss.ThickBorder())
+			bodyBlock = lipgloss.NewStyle().Foreground(lipgloss.Color("15")).Render(bodyBlock)
+		}
+
+		body += dynamicStyle.Render(bodyBlock) + "\n"
 	}
 
-	return fmt.Sprintf(
-		"\n%s\n\n%sLight Status: %s\nBrightness: %d%%\nColor Temperature: %dK\n\n%s[Press 'q' to quit, 't' to toggle, 'j' to increase brightness, 'k' to decrease brightness, 'n' to increase temperature, 'm' to decrease temperature]",
-		lightStyle.Render("Elgato Key Light Control"),
-		lightStyle.Render("Status: "), lightStatus, m.brightness, m.colorTemp,
-		lightStyle.Render("Controls: "),
-	)
+	s = headerBlock + body
+
+	footer := "\nControls: ↑/k, ↓/j: Navigate | Enter: Toggle | g: Global toggle | +: Brightness up, -: down | n: Temp up, m: Temp down | q: Quit"
+
+	linesUsed := countLines(s) + countLines(footer)
+	spacerLines := m.height - linesUsed
+	if spacerLines < 0 {
+		spacerLines = 0
+	}
+	spacer := ""
+	for i := 0; i < spacerLines; i++ {
+		spacer += "\n"
+	}
+
+	return s + spacer + footer
+}
+
+func countLines(s string) int {
+	count := 0
+	for _, r := range s {
+		if r == '\n' {
+			count++
+		}
+	}
+	return count + 1
 }

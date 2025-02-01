@@ -58,18 +58,9 @@ func ValidateTemperature(temperature int) error {
 	return nil
 }
 
-type Light struct {
-	Name string `mapstructure:"name"`
-	IP   string `mapstructure:"ip"`
-}
-
-type LightConfig struct {
-	Light `mapstructure:",squash"`
-}
-
 type lightOperation func(ip string) (*keylight.LightStatus, error)
 
-func processLightOperation(lights []Light, operation lightOperation, operationName string) {
+func processLightOperation(lights []keylight.Light, operation lightOperation, operationName string) {
 	var wg sync.WaitGroup
 	results := make(chan struct {
 		err    error
@@ -82,7 +73,7 @@ func processLightOperation(lights []Light, operation lightOperation, operationNa
 
 	for _, light := range lights {
 		wg.Add(1)
-		go func(light Light) {
+		go func(light keylight.Light) {
 			defer wg.Done()
 			status, err := operation(light.IP)
 			results <- struct {
@@ -138,12 +129,12 @@ func formatOnOff(on int) string {
 	return "OFF"
 }
 
-func GetLightsSettings(lights []Light) {
+func GetLightsSettings(lights []keylight.Light) {
 	controller := keylight.NewController()
 	processLightOperation(lights, controller.GetLight, "Status")
 }
 
-func UpdateLightsSettings(lights []Light, settings keylight.LightDetail) {
+func UpdateLightsSettings(lights []keylight.Light, settings keylight.LightDetail) {
 	controller := keylight.NewController()
 	updateOperation := func(ip string) (*keylight.LightStatus, error) {
 		return controller.UpdateLight(ip, settings)
@@ -151,7 +142,7 @@ func UpdateLightsSettings(lights []Light, settings keylight.LightDetail) {
 	processLightOperation(lights, updateOperation, "Update")
 }
 
-func FindLightByName(lights []LightConfig, name string) *LightConfig {
+func FindLightByName(lights []keylight.LightConfig, name string) *keylight.LightConfig {
 	for i := range lights {
 		if lights[i].Name == name {
 			return &lights[i]
@@ -160,7 +151,7 @@ func FindLightByName(lights []LightConfig, name string) *LightConfig {
 	return nil
 }
 
-func GetAvailableLightNames(lights []LightConfig) string {
+func GetAvailableLightNames(lights []keylight.LightConfig) string {
 	var names []string
 	for _, light := range lights {
 		names = append(names, light.Name)
@@ -168,10 +159,10 @@ func GetAvailableLightNames(lights []LightConfig) string {
 	return strings.Join(names, ", ")
 }
 
-func ToLights(lightsConfig []LightConfig) []Light {
-	var lights []Light
+func ToLights(lightsConfig []keylight.LightConfig) []keylight.Light {
+	var lights []keylight.Light
 	for _, lightConfig := range lightsConfig {
-		lights = append(lights, Light{
+		lights = append(lights, keylight.Light{
 			Name: lightConfig.Name,
 			IP:   lightConfig.IP,
 		})

@@ -32,6 +32,15 @@ type LightStatus struct {
 	NumberOfLights int           `json:"numberOfLights,omitempty"`
 }
 
+type Light struct {
+	Name string `mapstructure:"name"`
+	IP   string `mapstructure:"ip"`
+}
+
+type LightConfig struct {
+	Light `mapstructure:",squash"`
+}
+
 func getLightsURL(ip string) string {
 	return fmt.Sprintf("http://%s/elgato/lights", ip)
 }

@@ -4,19 +4,20 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/eckertalex/keylightctl/internal/keylight"
 	"github.com/eckertalex/keylightctl/tui"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	lightsConfig []LightConfig
+	lightsConfig []keylight.LightConfig
 	cfgFile      string
 	rootCmd      = &cobra.Command{
 		Use:   "keylightctl",
 		Short: "A CLI to manage your Elgato Key Light Air",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := tui.Run(); err != nil {
+			if err := tui.Run(lightsConfig); err != nil {
 				fmt.Println("Error running TUI:", err)
 			}
 		},

@@ -22,7 +22,7 @@ var (
 					return
 				}
 
-				lights := ToLights([]LightConfig{*lightConfig})
+				lights := ToLights([]keylight.LightConfig{*lightConfig})
 				UpdateLightsSettings(lights, keylight.LightDetail{On: 0})
 				return
 			}
