@@ -26,7 +26,7 @@ type LightStatus struct {
 }
 
 var httpClient = &http.Client{
-	Timeout: 10 * time.Second,
+	Timeout: 3 * time.Second,
 }
 
 func getLightsURL(ip string) string {
@@ -143,14 +143,8 @@ type Light struct {
 	IP   string `mapstructure:"ip"`
 }
 
-type LightProfile struct {
-	Brightness  int `mapstructure:"brightness"`
-	Temperature int `mapstructure:"temperature"`
-}
-
 type LightConfig struct {
-	Light    `mapstructure:",squash"`
-	Profiles map[string]LightProfile `mapstructure:"profiles"`
+	Light `mapstructure:",squash"`
 }
 
 type lightOperation func(ip string) (*LightStatus, error)

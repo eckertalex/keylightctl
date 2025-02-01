@@ -3,9 +3,9 @@ package tui
 import tea "github.com/charmbracelet/bubbletea"
 
 type Model struct {
-	lightOn        bool
-	brightness     int
-	colorTemp      int
+	lightOn    bool
+	brightness int
+	colorTemp  int
 }
 
 func (m Model) Init() tea.Cmd {
@@ -19,4 +19,3 @@ func initialModel() Model {
 		colorTemp:  4000,
 	}
 }
-

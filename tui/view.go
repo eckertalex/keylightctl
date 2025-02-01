@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	lightOnStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
+	lightOnStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
 	lightOffStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
 )
 
@@ -28,4 +28,3 @@ func (m Model) View() string {
 		lightStyle.Render("Controls: "),
 	)
 }
-

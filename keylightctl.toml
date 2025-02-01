@@ -2,22 +2,6 @@
 	name = "Left"
 	ip = "192.168.2.164:9123"
 
-[lights.profiles.primary]
-	brightness = 50
-	temperature = 4000
-
-[lights.profiles.morning]
-	brightness = 30
-	temperature = 4500
-
 [[lights]]
 	name = "Right"
 	ip = "192.168.2.165:9123"
-
-[lights.profiles.primary]
-	brightness = 70
-	temperature = 3500
-
-[lights.profiles.morning]
-	brightness = 40
-	temperature = 4000
