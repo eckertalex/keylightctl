@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"slices"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/eckertalex/keylightctl/internal/keylight"
 )
@@ -13,8 +15,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "q", "ctrl+c":
+		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
+		case "r", "R":
+			var cmds []tea.Cmd
+			for i := range m.Lights {
+				m.Lights[i].On = m.GlobalOn
+				cmds = append(cmds, fetchLightStatus(i, m.Lights[i].IP))
+			}
+			return m, tea.Batch(cmds...)
 		case "g", "G":
 			m.GlobalOn = !m.GlobalOn
 			var cmds []tea.Cmd
@@ -28,7 +37,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						return 0
 					}(),
 					Brightness:  m.Lights[i].Brightness,
-					Temperature: toMired(m.Lights[i].Temperature),
+					Temperature: keylight.KelvinToMired(m.Lights[i].Temperature),
 				}
 				cmds = append(cmds, updateLight(i, m.Lights[i].IP, settings))
 			}
@@ -52,7 +61,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return 0
 				}(),
 				Brightness:  m.Lights[idx].Brightness,
-				Temperature: toMired(m.Lights[idx].Temperature),
+				Temperature: keylight.KelvinToMired(m.Lights[idx].Temperature),
 			}
 			return m, updateLight(idx, m.Lights[idx].IP, settings)
 		case "+":
@@ -68,7 +77,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return 0
 				}(),
 				Brightness:  m.Lights[idx].Brightness,
-				Temperature: toMired(m.Lights[idx].Temperature),
+				Temperature: keylight.KelvinToMired(m.Lights[idx].Temperature),
 			}
 			return m, updateLight(idx, m.Lights[idx].IP, settings)
 		case "-":
@@ -84,7 +93,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return 0
 				}(),
 				Brightness:  m.Lights[idx].Brightness,
-				Temperature: toMired(m.Lights[idx].Temperature),
+				Temperature: keylight.KelvinToMired(m.Lights[idx].Temperature),
 			}
 			return m, updateLight(idx, m.Lights[idx].IP, settings)
 		case "n":
@@ -100,7 +109,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return 0
 				}(),
 				Brightness:  m.Lights[idx].Brightness,
-				Temperature: toMired(m.Lights[idx].Temperature),
+				Temperature: keylight.KelvinToMired(m.Lights[idx].Temperature),
 			}
 			return m, updateLight(idx, m.Lights[idx].IP, settings)
 		case "m":
@@ -116,24 +125,36 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return 0
 				}(),
 				Brightness:  m.Lights[idx].Brightness,
-				Temperature: toMired(m.Lights[idx].Temperature),
+				Temperature: keylight.KelvinToMired(m.Lights[idx].Temperature),
 			}
 			return m, updateLight(idx, m.Lights[idx].IP, settings)
 		}
 	case lightStatusMsg:
-		if msg.err == nil {
-			idx := msg.index
-			m.Lights[idx].On = msg.status.On == 1
-			m.Lights[idx].Brightness = msg.status.Brightness
-			m.Lights[idx].Temperature = MiredToKelvin(msg.status.Temperature)
+		if msg.err != nil {
+			// TODO: handle error
+			break
 		}
+
+		m.Lights[msg.index].On = msg.status.On == 1
+		m.Lights[msg.index].Brightness = msg.status.Brightness
+		m.Lights[msg.index].Temperature = keylight.MiredToKelvin(msg.status.Temperature)
+
+		m.GlobalOn = !slices.ContainsFunc(m.Lights, func(l Light) bool {
+			return !l.On
+		})
 	case lightUpdateMsg:
-		if msg.err == nil {
-			idx := msg.index
-			m.Lights[idx].On = msg.status.On == 1
-			m.Lights[idx].Brightness = msg.status.Brightness
-			m.Lights[idx].Temperature = MiredToKelvin(msg.status.Temperature)
+		if msg.err != nil {
+			// TODO: handle error
+			break
 		}
+
+		m.Lights[msg.index].On = msg.status.On == 1
+		m.Lights[msg.index].Brightness = msg.status.Brightness
+		m.Lights[msg.index].Temperature = keylight.MiredToKelvin(msg.status.Temperature)
+
+		m.GlobalOn = !slices.ContainsFunc(m.Lights, func(l Light) bool {
+			return !l.On
+		})
 	}
 
 	return m, nil

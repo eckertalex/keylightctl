@@ -103,19 +103,3 @@ func updateLight(index int, ip string, settings keylight.LightDetail) tea.Cmd {
 		return lightUpdateMsg{index: index, status: detail, err: err}
 	}
 }
-
-func toMired(kelvin int) int {
-	v := 1000000 / kelvin
-	return roundToNearest50(v)
-}
-
-func roundToNearest50(n int) int {
-	return (n + 25) / 50 * 50
-}
-
-func MiredToKelvin(mired int) int {
-	if mired == 0 {
-		return 0
-	}
-	return roundToNearest50(1000000 / mired)
-}

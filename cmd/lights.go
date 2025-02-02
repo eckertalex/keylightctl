@@ -29,21 +29,6 @@ func Spinner(done <-chan struct{}) {
 	}
 }
 
-func MiredToKelvin(mired int) int {
-	// Mired is defined as 1 million divided by color temperature in Kelvin
-	// So to get Kelvin from mired: K = 1000000/mired
-	return roundToNearest50(1000000 / mired)
-}
-
-func KelvinToMired(kelvin int) int {
-	// Mired is defined as 1,000,000 / Kelvin
-	return 1000000 / kelvin
-}
-
-func roundToNearest50(n int) int {
-	return (n + 25) / 50 * 50
-}
-
 func ValidateBrightness(brightness int) error {
 	if brightness < 0 || brightness > 100 {
 		return fmt.Errorf("brightness must be between 0 and 100")
@@ -111,7 +96,7 @@ func processLightOperation(lights []keylight.Light, operation lightOperation, op
 			fmt.Printf("  Power: %s\n", formatOnOff(light.On))
 			fmt.Printf("  Brightness: %d%%\n", light.Brightness)
 			fmt.Printf("  Temperature: %dK (mired: %d)\n",
-				MiredToKelvin(light.Temperature),
+				keylight.MiredToKelvin(light.Temperature),
 				light.Temperature)
 		}
 	}

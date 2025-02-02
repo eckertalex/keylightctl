@@ -32,7 +32,7 @@ var (
 					fmt.Printf("Invalid temperature: %v\n", err)
 					return
 				}
-				settings.Temperature = KelvinToMired(*onTemperature)
+				settings.Temperature = keylight.KelvinToMired(*onTemperature)
 			}
 
 			if onLightName != "" {

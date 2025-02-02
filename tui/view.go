@@ -52,7 +52,7 @@ func (m Model) View() string {
 
 	s = headerBlock + body
 
-	footer := "\nControls: ↑/k, ↓/j: Navigate | Enter: Toggle | g: Global toggle | +: Brightness up, -: down | n: Temp up, m: Temp down | q: Quit"
+	footer := "\nControls: ↑/k, ↓/j: Navigate | Enter: Toggle | g: Global toggle | r: Refresh | +: Brightness up, -: down | n: Temp up, m: Temp down | q: Quit"
 
 	linesUsed := countLines(s) + countLines(footer)
 	spacerLines := m.height - linesUsed
