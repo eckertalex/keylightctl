@@ -18,7 +18,7 @@ var (
 
 				if lightConfig == nil {
 					availableLights := GetAvailableLightNames(lightsConfig)
-					fmt.Printf("Light with name '%s' not found. Available lights: %s\n", statusLightName, availableLights)
+					fmt.Printf("Light '%s' not found. Available lights: %s\n", statusLightName, availableLights)
 					return
 				}
 

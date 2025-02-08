@@ -21,30 +21,6 @@ func NewController() *Controller {
 	}
 }
 
-type LightDetail struct {
-	On          int `json:"on"`
-	Brightness  int `json:"brightness,omitempty"`
-	Temperature int `json:"temperature,omitempty"`
-}
-
-type LightStatus struct {
-	Lights         []LightDetail `json:"lights,omitempty"`
-	NumberOfLights int           `json:"numberOfLights,omitempty"`
-}
-
-type Light struct {
-	Name string `mapstructure:"name"`
-	IP   string `mapstructure:"ip"`
-}
-
-type LightConfig struct {
-	Light `mapstructure:",squash"`
-}
-
-func getLightsURL(ip string) string {
-	return fmt.Sprintf("http://%s/elgato/lights", ip)
-}
-
 func (c *Controller) GetLight(ip string) (*LightStatus, error) {
 	resp, err := c.client.Get(getLightsURL(ip))
 	if err != nil {
@@ -103,4 +79,8 @@ func (c *Controller) UpdateLight(ip string, settings LightDetail) (*LightStatus,
 	}
 
 	return &status, nil
+}
+
+func getLightsURL(ip string) string {
+	return fmt.Sprintf("http://%s/elgato/lights", ip)
 }

@@ -41,7 +41,6 @@ func initConfig() {
 	} else {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
-
 		viper.AddConfigPath(home)
 		viper.SetConfigType("toml")
 		viper.SetConfigName(".keylightctl")
