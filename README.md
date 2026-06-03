@@ -25,17 +25,17 @@ keylightctl --help      # full command list
 
 Run `keylightctl` with no arguments for the interactive TUI:
 
-| Key                  | Action                    |
-| -------------------- | ------------------------- |
-| `↑/k`, `↓/j`         | Move between lights       |
-| `Enter`              | Toggle the selected light |
-| `g`                  | Toggle all lights         |
-| `r`                  | Refresh status            |
-| `+` / `-`            | Brightness up / down      |
-| `n` / `m`            | Temperature up / down     |
-| `q`, `esc`, `ctrl+c` | Quit                      |
+| Key                  | Action                         |
+| -------------------- | ------------------------------ |
+| `h` / `l`            | Move between lights            |
+| `j` / `k`            | Move between brightness / temp |
+| `=` / `-`            | Adjust focused property        |
+| `enter`              | Toggle the selected light      |
+| `a`                  | Toggle all lights              |
+| `r`                  | Refresh status                 |
+| `q`, `esc`, `ctrl+c` | Quit                           |
 
-![TUI screenshot](assets/screenshot.png)
+![TUI screenshot](assets/keylightctl.png)
 
 Build and install with make:
 

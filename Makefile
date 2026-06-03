@@ -1,6 +1,6 @@
 VERSION := $(shell git describe --abbrev=0 --tags --always)
 LDFLAGS := -X main.Version=$(VERSION)
-BIN := ./keylightctl
+BIN := ./bin/keylightctl
 BINDIR ?= $(HOME)/.local/bin
 
 ## help: print this help message
@@ -48,5 +48,11 @@ install: build
 uninstall:
 	@rm -f $(BINDIR)/keylightctl
 	@echo "Removed $(BINDIR)/keylightctl"
+
+## clean: remove build artifacts
+.PHONY: clean
+clean:
+	rm -rf bin
+
 
 # vim: set tabstop=4 shiftwidth=4 noexpandtab

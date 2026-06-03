@@ -21,114 +21,51 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "r", "R":
 			var cmds []tea.Cmd
 			for i := range m.Lights {
-				m.Lights[i].On = m.GlobalOn
 				cmds = append(cmds, fetchLightStatus(i, m.Lights[i].IP))
 			}
 			return m, tea.Batch(cmds...)
-		case "g", "G":
+		case "a", "A":
 			m.GlobalOn = !m.GlobalOn
 			var cmds []tea.Cmd
 			for i := range m.Lights {
 				m.Lights[i].On = m.GlobalOn
-				settings := keylight.LightDetail{
-					On: func() int {
-						if m.GlobalOn {
-							return 1
-						}
-						return 0
-					}(),
-					Brightness:  m.Lights[i].Brightness,
-					Temperature: keylight.KelvinToMired(m.Lights[i].Temperature),
-				}
-				cmds = append(cmds, updateLight(i, m.Lights[i].IP, settings))
+				cmds = append(cmds, updateLight(i, m.Lights[i].IP, m.currentSettings(i)))
 			}
 			return m, tea.Batch(cmds...)
-		case "up", "k":
+		case "h", "left":
 			if m.Cursor > 0 {
 				m.Cursor--
 			}
-		case "down", "j":
+		case "l", "right":
 			if m.Cursor < len(m.Lights)-1 {
 				m.Cursor++
 			}
+		case "j", "down", "tab":
+			m.PropertyCursor = (m.PropertyCursor + 1) % 2
+		case "k", "up", "shift+tab":
+			m.PropertyCursor = (m.PropertyCursor - 1 + 2) % 2
 		case "enter":
 			idx := m.Cursor
 			m.Lights[idx].On = !m.Lights[idx].On
-			settings := keylight.LightDetail{
-				On: func() int {
-					if m.Lights[idx].On {
-						return 1
-					}
-					return 0
-				}(),
-				Brightness:  m.Lights[idx].Brightness,
-				Temperature: keylight.KelvinToMired(m.Lights[idx].Temperature),
-			}
-			return m, updateLight(idx, m.Lights[idx].IP, settings)
-		case "+":
+			return m, updateLight(idx, m.Lights[idx].IP, m.currentSettings(idx))
+		case "=":
 			idx := m.Cursor
-			if m.Lights[idx].Brightness < 100 {
-				m.Lights[idx].Brightness += 5
+			switch m.PropertyCursor {
+			case 0:
+				m.Lights[idx].Brightness = min(m.Lights[idx].Brightness+5, 100)
+			case 1:
+				m.Lights[idx].Temperature = min(m.Lights[idx].Temperature+100, 7000)
 			}
-			settings := keylight.LightDetail{
-				On: func() int {
-					if m.Lights[idx].On {
-						return 1
-					}
-					return 0
-				}(),
-				Brightness:  m.Lights[idx].Brightness,
-				Temperature: keylight.KelvinToMired(m.Lights[idx].Temperature),
-			}
-			return m, updateLight(idx, m.Lights[idx].IP, settings)
+			return m, updateLight(idx, m.Lights[idx].IP, m.currentSettings(idx))
 		case "-":
 			idx := m.Cursor
-			if m.Lights[idx].Brightness > 0 {
-				m.Lights[idx].Brightness -= 5
+			switch m.PropertyCursor {
+			case 0:
+				m.Lights[idx].Brightness = max(m.Lights[idx].Brightness-5, 0)
+			case 1:
+				m.Lights[idx].Temperature = max(m.Lights[idx].Temperature-100, 2900)
 			}
-			settings := keylight.LightDetail{
-				On: func() int {
-					if m.Lights[idx].On {
-						return 1
-					}
-					return 0
-				}(),
-				Brightness:  m.Lights[idx].Brightness,
-				Temperature: keylight.KelvinToMired(m.Lights[idx].Temperature),
-			}
-			return m, updateLight(idx, m.Lights[idx].IP, settings)
-		case "n":
-			idx := m.Cursor
-			if m.Lights[idx].Temperature < 7000 {
-				m.Lights[idx].Temperature += 100
-			}
-			settings := keylight.LightDetail{
-				On: func() int {
-					if m.Lights[idx].On {
-						return 1
-					}
-					return 0
-				}(),
-				Brightness:  m.Lights[idx].Brightness,
-				Temperature: keylight.KelvinToMired(m.Lights[idx].Temperature),
-			}
-			return m, updateLight(idx, m.Lights[idx].IP, settings)
-		case "m":
-			idx := m.Cursor
-			if m.Lights[idx].Temperature > 2900 {
-				m.Lights[idx].Temperature -= 100
-			}
-			settings := keylight.LightDetail{
-				On: func() int {
-					if m.Lights[idx].On {
-						return 1
-					}
-					return 0
-				}(),
-				Brightness:  m.Lights[idx].Brightness,
-				Temperature: keylight.KelvinToMired(m.Lights[idx].Temperature),
-			}
-			return m, updateLight(idx, m.Lights[idx].IP, settings)
+			return m, updateLight(idx, m.Lights[idx].IP, m.currentSettings(idx))
 		}
 	case lightStatusMsg:
 		if msg.err != nil {

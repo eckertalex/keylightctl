@@ -21,7 +21,8 @@ type Model struct {
 
 	Lights []Light
 
-	Cursor int
+	Cursor         int
+	PropertyCursor int // 0 = brightness, 1 = temperature
 
 	brightnessBar  progress.Model
 	temperatureBar progress.Model
@@ -76,6 +77,21 @@ type lightUpdateMsg struct {
 	index  int
 	status keylight.LightDetail
 	err    error
+}
+
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+func (m Model) currentSettings(idx int) keylight.LightDetail {
+	return keylight.LightDetail{
+		On:          boolToInt(m.Lights[idx].On),
+		Brightness:  m.Lights[idx].Brightness,
+		Temperature: keylight.KelvinToMired(m.Lights[idx].Temperature),
+	}
 }
 
 func fetchLightStatus(index int, ip string) tea.Cmd {

@@ -28,7 +28,7 @@ func MiredToKelvin(mired int) int {
 
 func KelvinToMired(kelvin int) int {
 	// Mired is defined as 1,000,000 / Kelvin
-	return roundToNearest50(1000000 / kelvin)
+	return 1000000 / kelvin
 }
 
 func roundToNearest50(n int) int {

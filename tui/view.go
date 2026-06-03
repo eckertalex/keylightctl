@@ -8,92 +8,105 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const cardWidth = 72
+func cardContentWidth(termWidth int) int {
+	if termWidth > 76 {
+		return termWidth - 4
+	}
+	return 72
+}
 
-func baseCardStyle() lipgloss.Style {
+func baseCardStyle(contentWidth int) lipgloss.Style {
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		Padding(0, 1).
-		Width(cardWidth)
+		Width(contentWidth)
 }
 
 func applySelection(style lipgloss.Style, selected bool) lipgloss.Style {
 	if selected {
-		return style.BorderForeground(lipgloss.Color("2"))
+		return style.
+			BorderStyle(lipgloss.ThickBorder()).
+			BorderForeground(lipgloss.AdaptiveColor{Light: "2", Dark: "10"})
 	}
 	return style
 }
 
 func formatStatus(isOn bool) string {
 	if isOn {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("2")).Render("ON")
+		return lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "2", Dark: "10"}).Render("ON")
 	}
-	return lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Render("OFF")
+	return lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "1", Dark: "9"}).Render("OFF")
 }
 
-func renderGlobalCard(globalOn bool) string {
+func renderGlobalCard(globalOn bool, contentWidth int) string {
 	globalText := lipgloss.NewStyle().Bold(true).Render("Global Power: " + formatStatus(globalOn))
-	card := baseCardStyle()
-	return card.Render(globalText)
+	return baseCardStyle(contentWidth).Render(globalText)
 }
 
-func renderLightCard(light Light, isSelected bool, brightnessBar, temperatureBar progress.Model) string {
-	card := applySelection(baseCardStyle(), isSelected)
+func renderLightCard(light Light, isSelected bool, propertyCursor int, brightnessBar, temperatureBar progress.Model, contentWidth int) string {
+	card := applySelection(baseCardStyle(contentWidth), isSelected)
 
-	lightHeader := lipgloss.NewStyle().Bold(true).Render(light.Name + " " + formatStatus(light.On))
+	var nameStr string
+	if isSelected {
+		nameStr = "[" + light.Name + "]"
+	} else {
+		nameStr = " " + light.Name + " "
+	}
+	lightHeader := lipgloss.NewStyle().Bold(true).Render(nameStr + "  " + formatStatus(light.On))
+
+	brightnessPrefix := "  "
+	temperaturePrefix := "  "
+	if isSelected {
+		if propertyCursor == 0 {
+			brightnessPrefix = "▶ "
+		} else {
+			temperaturePrefix = "▶ "
+		}
+	}
 
 	brightnessRatio := float64(light.Brightness) / 100.0
 	tempRatio := float64(light.Temperature-2900) / float64(7000-2900)
-	brightnessBarStr := brightnessBar.ViewAs(brightnessRatio)
-	temperatureBarStr := temperatureBar.ViewAs(tempRatio)
 
-	brightnessText := fmt.Sprintf("Brightness: %d%%  %s", light.Brightness, brightnessBarStr)
-	temperatureText := fmt.Sprintf("Temp: %dK  %s", light.Temperature, temperatureBarStr)
+	brightnessText := fmt.Sprintf("%sBrightness   %3d%%  %s", brightnessPrefix, light.Brightness, brightnessBar.ViewAs(brightnessRatio))
+	temperatureText := fmt.Sprintf("%sTemperature %4dK  %s", temperaturePrefix, light.Temperature, temperatureBar.ViewAs(tempRatio))
 
 	bodyBlock := lipgloss.JoinVertical(lipgloss.Left, lightHeader, brightnessText, temperatureText)
-
-	if isSelected {
-		bodyBlock = lipgloss.NewStyle().Foreground(lipgloss.Color("15")).Render(bodyBlock)
-	}
-
 	return card.Render(bodyBlock)
 }
 
-func renderFooter() string {
-	footerStyle := baseCardStyle().
-		BorderForeground(lipgloss.Color("240")).
-		Foreground(lipgloss.Color("240"))
-
-	controlsText := "↑/k, ↓/j: Move | Enter: Toggle | g: Toggle all | r: Refresh\n+/-: Brightness | n/m: Temperature | q: Quit"
-
-	return footerStyle.Render(controlsText)
+func renderFooter(termWidth int) string {
+	text := "  h/l light  ·  j/k property  ·  =/- adjust  ·  enter toggle  ·  a all  ·  r refresh  ·  q quit"
+	if termWidth > 0 && termWidth < 100 {
+		text = "  h/l  ·  j/k  ·  =/- adjust  ·  enter  ·  a  ·  r  ·  q"
+	}
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.AdaptiveColor{Light: "245", Dark: "240"}).
+		Render(text)
 }
 
 func (m Model) View() string {
-	globalCard := renderGlobalCard(m.GlobalOn)
+	cw := cardContentWidth(m.width)
+	globalCard := renderGlobalCard(m.GlobalOn, cw)
 
 	lightCards := make([]string, len(m.Lights))
 	for i, light := range m.Lights {
-		lightCards[i] = renderLightCard(light, i == m.Cursor, m.brightnessBar, m.temperatureBar)
+		lightCards[i] = renderLightCard(light, i == m.Cursor, m.PropertyCursor, m.brightnessBar, m.temperatureBar, cw)
 	}
 
-	footer := renderFooter()
+	footer := renderFooter(m.width)
 
 	var errLine string
 	if m.err != nil {
-		errLine = lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Render("Error: " + m.err.Error())
+		errLine = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "1", Dark: "9"}).Render("Error: " + m.err.Error())
 	}
 
 	globalHeight := strings.Count(globalCard, "\n") + 1
 	footerHeight := strings.Count(footer, "\n") + 1
 	lightsHeight := 0
-	for _, light := range lightCards {
-		lightsHeight += strings.Count(light, "\n") + 1
+	for _, lc := range lightCards {
+		lightsHeight += strings.Count(lc, "\n") + 1
 	}
-	spacerHeight := m.height - globalHeight - lightsHeight - footerHeight - 1
-	if spacerHeight < 0 {
-		spacerHeight = 0
-	}
+	spacerHeight := max(m.height-globalHeight-lightsHeight-footerHeight-1, 0)
 
 	spacer := strings.Repeat("\n", spacerHeight)
 	content := append([]string{globalCard}, lightCards...)
