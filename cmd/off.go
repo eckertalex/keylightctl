@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/eckertalex/keylightctl/internal/keylight"
 	"github.com/spf13/cobra"
 )
@@ -13,21 +11,10 @@ var (
 		Use:   "off",
 		Short: "Turn off the lights",
 		Run: func(cmd *cobra.Command, args []string) {
-			if offLightName != "" {
-				lightConfig := FindLightByName(lightsConfig, offLightName)
-
-				if lightConfig == nil {
-					availableLights := GetAvailableLightNames(lightsConfig)
-					fmt.Printf("Light '%s' not found. Available lights: %s\n", offLightName, availableLights)
-					return
-				}
-
-				lights := ToLights([]keylight.LightConfig{*lightConfig})
-				UpdateLightsSettings(lights, keylight.LightDetail{On: 0})
+			lights, ok := resolveLights(offLightName)
+			if !ok {
 				return
 			}
-
-			lights := ToLights(lightsConfig)
 			UpdateLightsSettings(lights, keylight.LightDetail{On: 0})
 		},
 	}

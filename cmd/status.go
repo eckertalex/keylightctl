@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
-	"github.com/eckertalex/keylightctl/internal/keylight"
 	"github.com/spf13/cobra"
 )
 
@@ -13,21 +10,10 @@ var (
 		Use:   "status",
 		Short: "Get the current status of all configured lights",
 		Run: func(cmd *cobra.Command, args []string) {
-			if statusLightName != "" {
-				lightConfig := FindLightByName(lightsConfig, statusLightName)
-
-				if lightConfig == nil {
-					availableLights := GetAvailableLightNames(lightsConfig)
-					fmt.Printf("Light '%s' not found. Available lights: %s\n", statusLightName, availableLights)
-					return
-				}
-
-				lights := ToLights([]keylight.LightConfig{*lightConfig})
-				GetLightsSettings(lights)
+			lights, ok := resolveLights(statusLightName)
+			if !ok {
 				return
 			}
-
-			lights := ToLights(lightsConfig)
 			GetLightsSettings(lights)
 		},
 	}

@@ -35,21 +35,10 @@ var (
 				settings.Temperature = keylight.KelvinToMired(*onTemperature)
 			}
 
-			if onLightName != "" {
-				lightConfig := FindLightByName(lightsConfig, onLightName)
-
-				if lightConfig == nil {
-					availableLights := GetAvailableLightNames(lightsConfig)
-					fmt.Printf("Light '%s' not found. Available lights: %s\n", onLightName, availableLights)
-					return
-				}
-
-				lights := ToLights([]keylight.LightConfig{*lightConfig})
-				UpdateLightsSettings(lights, settings)
+			lights, ok := resolveLights(onLightName)
+			if !ok {
 				return
 			}
-
-			lights := ToLights(lightsConfig)
 			UpdateLightsSettings(lights, settings)
 		},
 	}

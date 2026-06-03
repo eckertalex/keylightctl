@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"slices"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -131,9 +132,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case lightStatusMsg:
 		if msg.err != nil {
-			// TODO: handle error
+			m.err = fmt.Errorf("%s: %w", m.Lights[msg.index].Name, msg.err)
 			break
 		}
+		m.err = nil
 
 		m.Lights[msg.index].On = msg.status.On == 1
 		m.Lights[msg.index].Brightness = msg.status.Brightness
@@ -144,9 +146,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		})
 	case lightUpdateMsg:
 		if msg.err != nil {
-			// TODO: handle error
+			m.err = fmt.Errorf("%s: %w", m.Lights[msg.index].Name, msg.err)
 			break
 		}
+		m.err = nil
 
 		m.Lights[msg.index].On = msg.status.On == 1
 		m.Lights[msg.index].Brightness = msg.status.Brightness

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -36,7 +37,7 @@ func renderGlobalCard(globalOn bool) string {
 	return card.Render(globalText)
 }
 
-func renderLightCard(light Light, isSelected bool, brightnessBar, temperatureBar Bar) string {
+func renderLightCard(light Light, isSelected bool, brightnessBar, temperatureBar progress.Model) string {
 	card := applySelection(baseCardStyle(), isSelected)
 
 	lightHeader := lipgloss.NewStyle().Bold(true).Render(light.Name + " " + formatStatus(light.On))
@@ -68,10 +69,6 @@ func renderFooter() string {
 	return footerStyle.Render(controlsText)
 }
 
-type Bar interface {
-	ViewAs(ratio float64) string
-}
-
 func (m Model) View() string {
 	globalCard := renderGlobalCard(m.GlobalOn)
 
@@ -81,6 +78,11 @@ func (m Model) View() string {
 	}
 
 	footer := renderFooter()
+
+	var errLine string
+	if m.err != nil {
+		errLine = lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Render("Error: " + m.err.Error())
+	}
 
 	globalHeight := strings.Count(globalCard, "\n") + 1
 	footerHeight := strings.Count(footer, "\n") + 1
@@ -95,8 +97,10 @@ func (m Model) View() string {
 
 	spacer := strings.Repeat("\n", spacerHeight)
 	content := append([]string{globalCard}, lightCards...)
-	content = append(content, spacer)
-	content = append(content, footer)
+	content = append(content, spacer, footer)
+	if errLine != "" {
+		content = append(content, errLine)
+	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, content...)
 }

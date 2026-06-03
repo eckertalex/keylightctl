@@ -46,8 +46,6 @@ func initConfig() {
 		viper.SetConfigName(".keylightctl")
 	}
 
-	viper.AutomaticEnv()
-
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to read config file: %v\n", err)
 		os.Exit(1)

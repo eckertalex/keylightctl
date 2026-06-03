@@ -26,6 +26,8 @@ type Model struct {
 	brightnessBar  progress.Model
 	temperatureBar progress.Model
 
+	err error
+
 	width  int
 	height int
 }

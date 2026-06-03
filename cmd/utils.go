@@ -144,6 +144,21 @@ func GetAvailableLightNames(lights []keylight.LightConfig) string {
 	return strings.Join(names, ", ")
 }
 
+// resolveLights returns the lights to act on for an optional --light name: all
+// configured lights when name is empty, or the single named light. The bool is
+// false when a name was given but not found (a message is printed in that case).
+func resolveLights(name string) ([]keylight.Light, bool) {
+	if name == "" {
+		return ToLights(lightsConfig), true
+	}
+	lightConfig := FindLightByName(lightsConfig, name)
+	if lightConfig == nil {
+		fmt.Printf("Light '%s' not found. Available lights: %s\n", name, GetAvailableLightNames(lightsConfig))
+		return nil, false
+	}
+	return ToLights([]keylight.LightConfig{*lightConfig}), true
+}
+
 func ToLights(lightsConfig []keylight.LightConfig) []keylight.Light {
 	var lights []keylight.Light
 	for _, lightConfig := range lightsConfig {
