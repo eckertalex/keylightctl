@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"net"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/progress"
@@ -43,6 +44,14 @@ func renderGlobalCard(globalOn bool, contentWidth int) string {
 	return baseCardStyle(contentWidth).Render(globalText)
 }
 
+func lightHost(ip string) string {
+	host, _, err := net.SplitHostPort(ip)
+	if err != nil {
+		return ip
+	}
+	return host
+}
+
 func renderLightCard(light Light, isSelected bool, propertyCursor int, brightnessBar, temperatureBar progress.Model, contentWidth int) string {
 	card := applySelection(baseCardStyle(contentWidth), isSelected)
 
@@ -52,7 +61,8 @@ func renderLightCard(light Light, isSelected bool, propertyCursor int, brightnes
 	} else {
 		nameStr = " " + light.Name + " "
 	}
-	lightHeader := lipgloss.NewStyle().Bold(true).Render(nameStr + "  " + formatStatus(light.On))
+	ipStr := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "245", Dark: "240"}).Render(lightHost(light.IP))
+	lightHeader := lipgloss.NewStyle().Bold(true).Render(nameStr+"  "+formatStatus(light.On)) + "  " + ipStr
 
 	brightnessPrefix := "  "
 	temperaturePrefix := "  "
@@ -95,9 +105,11 @@ func (m Model) View() string {
 
 	footer := renderFooter(m.width)
 
-	var errLine string
+	var statusLine string
 	if m.err != nil {
-		errLine = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "1", Dark: "9"}).Render("Error: " + m.err.Error())
+		statusLine = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "1", Dark: "9"}).Render("Error: " + m.err.Error())
+	} else if m.status != "" {
+		statusLine = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "245", Dark: "240"}).Render(m.status)
 	}
 
 	globalHeight := strings.Count(globalCard, "\n") + 1
@@ -106,14 +118,11 @@ func (m Model) View() string {
 	for _, lc := range lightCards {
 		lightsHeight += strings.Count(lc, "\n") + 1
 	}
-	spacerHeight := max(m.height-globalHeight-lightsHeight-footerHeight-1, 0)
+	spacerHeight := max(m.height-globalHeight-lightsHeight-footerHeight-2, 0)
 
 	spacer := strings.Repeat("\n", spacerHeight)
 	content := append([]string{globalCard}, lightCards...)
-	content = append(content, spacer, footer)
-	if errLine != "" {
-		content = append(content, errLine)
-	}
+	content = append(content, spacer, footer, statusLine)
 
 	return lipgloss.JoinVertical(lipgloss.Left, content...)
 }

@@ -27,7 +27,9 @@ type Model struct {
 	brightnessBar  progress.Model
 	temperatureBar progress.Model
 
-	err error
+	err             error
+	status          string
+	pendingRequests int
 
 	width  int
 	height int
@@ -55,11 +57,13 @@ func NewModel(configs []keylight.LightConfig) Model {
 		}
 	}
 	return Model{
-		GlobalOn:       false,
-		Lights:         lights,
-		Cursor:         0,
-		brightnessBar:  pb,
-		temperatureBar: pb,
+		GlobalOn:        false,
+		Lights:          lights,
+		Cursor:          0,
+		brightnessBar:   pb,
+		temperatureBar:  pb,
+		status:          "Loading...",
+		pendingRequests: len(configs),
 	}
 }
 

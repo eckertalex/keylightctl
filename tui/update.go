@@ -19,6 +19,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
 		case "r", "R":
+			m.pendingRequests += len(m.Lights)
+			m.status = "Refreshing..."
 			var cmds []tea.Cmd
 			for i := range m.Lights {
 				cmds = append(cmds, fetchLightStatus(i, m.Lights[i].IP))
@@ -26,6 +28,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Batch(cmds...)
 		case "a", "A":
 			m.GlobalOn = !m.GlobalOn
+			m.pendingRequests += len(m.Lights)
+			m.status = "Toggling all lights..."
 			var cmds []tea.Cmd
 			for i := range m.Lights {
 				m.Lights[i].On = m.GlobalOn
@@ -47,6 +51,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			idx := m.Cursor
 			m.Lights[idx].On = !m.Lights[idx].On
+			m.pendingRequests++
+			m.status = fmt.Sprintf("Toggling %s...", m.Lights[idx].Name)
 			return m, updateLight(idx, m.Lights[idx].IP, m.currentSettings(idx))
 		case "=":
 			idx := m.Cursor
@@ -56,6 +62,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 1:
 				m.Lights[idx].Temperature = min(m.Lights[idx].Temperature+100, 7000)
 			}
+			m.pendingRequests++
+			m.status = fmt.Sprintf("Updating %s...", m.Lights[idx].Name)
 			return m, updateLight(idx, m.Lights[idx].IP, m.currentSettings(idx))
 		case "-":
 			idx := m.Cursor
@@ -65,9 +73,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 1:
 				m.Lights[idx].Temperature = max(m.Lights[idx].Temperature-100, 2900)
 			}
+			m.pendingRequests++
+			m.status = fmt.Sprintf("Updating %s...", m.Lights[idx].Name)
 			return m, updateLight(idx, m.Lights[idx].IP, m.currentSettings(idx))
 		}
 	case lightStatusMsg:
+		m.pendingRequests = max(0, m.pendingRequests-1)
 		if msg.err != nil {
 			m.err = fmt.Errorf("%s: %w", m.Lights[msg.index].Name, msg.err)
 			break
@@ -81,7 +92,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.GlobalOn = !slices.ContainsFunc(m.Lights, func(l Light) bool {
 			return !l.On
 		})
+		if m.pendingRequests == 0 {
+			m.status = ""
+		}
 	case lightUpdateMsg:
+		m.pendingRequests = max(0, m.pendingRequests-1)
 		if msg.err != nil {
 			m.err = fmt.Errorf("%s: %w", m.Lights[msg.index].Name, msg.err)
 			break
@@ -95,6 +110,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.GlobalOn = !slices.ContainsFunc(m.Lights, func(l Light) bool {
 			return !l.On
 		})
+		if m.pendingRequests == 0 {
+			m.status = ""
+		}
 	}
 
 	return m, nil
