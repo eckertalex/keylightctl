@@ -12,7 +12,6 @@ help:
 ## audit: run quality control checks
 .PHONY: audit
 audit:
-	@echo "Checking module dependencies"
 	go mod tidy -diff
 	go mod verify
 	test -z "$(shell gofmt -l .)"
@@ -26,9 +25,7 @@ test:
 ## tidy: tidy and format all .go files
 .PHONY: tidy
 tidy:
-	@echo "Tidying module dependencies..."
 	go mod tidy
-	@echo "Formatting .go files..."
 	go fmt ./...
 
 ## build: build the application
