@@ -93,7 +93,7 @@ func (c *controller) updateLight(ip string, settings LightDetail) (*LightStatus,
 
 func retryHTTP(attempts int, delay time.Duration, f func() (*LightStatus, error)) (*LightStatus, error) {
 	var lastErr error
-	for i := 0; i < attempts; i++ {
+	for range attempts {
 		if result, err := f(); err == nil {
 			return result, nil
 		} else {

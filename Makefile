@@ -1,7 +1,15 @@
-VERSION := $(shell git describe --abbrev=0 --tags --always)
-LDFLAGS := -X main.Version=$(VERSION)
-BIN := ./bin/keylightctl
-BINDIR ?= $(HOME)/.local/bin
+BIN_NAME    ?= keylightctl
+GO          ?= go
+INSTALL_DIR ?= $(HOME)/.local/bin
+
+SRC_DIR   := .
+BUILD_DIR := ./bin
+TMP_DIR   := ./tmp
+
+VERSION      := $(shell git describe --abbrev=0 --tags --always)
+LDFLAGS      := -X main.Version=$(VERSION)
+PROD_LDFLAGS := -s -w $(LDFLAGS)
+BIN          := $(BUILD_DIR)/$(BIN_NAME)
 
 ## help: print this help message
 .PHONY: help
@@ -11,45 +19,62 @@ help:
 
 ## audit: run quality control checks
 .PHONY: audit
-audit:
-	go mod tidy -diff
-	go mod verify
-	test -z "$(shell gofmt -l .)"
-	go vet ./...
+audit: test
+	$(GO) mod tidy -diff
+	$(GO) mod verify
+	@test -z "$$(gofmt -l .)"
+	$(GO) vet ./...
 
 ## test: run all tests
 .PHONY: test
 test:
-	go test -v -race -buildvcs ./...
+	$(GO) test -v -race -buildvcs ./...
 
-## tidy: tidy and format all .go files
+## test/cover: run tests and open the HTML coverage report
+.PHONY: test/cover
+test/cover:
+	@mkdir -p $(TMP_DIR)
+	$(GO) test -v -race -buildvcs -coverprofile=$(TMP_DIR)/coverage.out ./...
+	$(GO) tool cover -html=$(TMP_DIR)/coverage.out
+
+## tidy: tidy modfiles and modernize and format .go files
 .PHONY: tidy
 tidy:
-	go mod tidy
-	go fmt ./...
+	$(GO) mod tidy -v
+	$(GO) fix ./...
+	$(GO) fmt ./...
 
 ## build: build the application
 .PHONY: build
 build:
-	@go build -v -ldflags "$(LDFLAGS)" -o=$(BIN) . 2>/dev/null
+	@$(GO) build -v -ldflags "$(LDFLAGS)" -o=$(BIN) $(SRC_DIR)
 
-## install: build and install to BINDIR (default ~/.local/bin)
+## build/prod: build an optimized, stripped, static production binary
+.PHONY: build/prod
+build/prod:
+	@CGO_ENABLED=0 $(GO) build -trimpath -ldflags "$(PROD_LDFLAGS)" -o=$(BIN) $(SRC_DIR)
+
+## run: run the bin
+.PHONY: run
+run: build
+	@$(BIN)
+
+## install: build and install to INSTALL_DIR (default ~/.local/bin)
 .PHONY: install
-install: build
-	@mkdir -p $(BINDIR)
-	@cp $(BIN) $(BINDIR)/keylightctl
-	@echo "Installed keylightctl to $(BINDIR)/keylightctl"
+install: build/prod
+	@mkdir -p $(INSTALL_DIR)
+	@cp $(BIN) $(INSTALL_DIR)/$(BIN_NAME)
+	@echo "Installed $(BIN_NAME) to $(INSTALL_DIR)/$(BIN_NAME)"
 
-## uninstall: remove the installed binary from BINDIR
+## uninstall: remove the installed binary from INSTALL_DIR
 .PHONY: uninstall
 uninstall:
-	@rm -f $(BINDIR)/keylightctl
-	@echo "Removed $(BINDIR)/keylightctl"
+	@rm -f $(INSTALL_DIR)/$(BIN_NAME)
+	@echo "Removed $(INSTALL_DIR)/$(BIN_NAME)"
 
 ## clean: remove build artifacts
 .PHONY: clean
 clean:
-	rm -rf bin
-
+	rm -rvI $(BUILD_DIR) $(TMP_DIR)
 
 # vim: set tabstop=4 shiftwidth=4 noexpandtab

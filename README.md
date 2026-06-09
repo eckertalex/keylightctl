@@ -9,7 +9,7 @@ Lights are read from `~/.config/keylightctl/config.json` (respects `$XDG_CONFIG_
 ```json
 {
   "lights": [
-    { "name": "Left",  "ip": "192.168.2.164:9123" },
+    { "name": "Left", "ip": "192.168.2.164:9123" },
     { "name": "Right", "ip": "192.168.2.165:9123" }
   ]
 }
@@ -40,6 +40,6 @@ Build and install with make:
 
 ```sh
 make build        # ./bin/keylightctl
-make install      # to ~/.local/bin (override with BINDIR=)
-make uninstall    # remove from BINDIR
+make install      # to ~/.local/bin (override with INSTALL_DIR=)
+make uninstall    # remove from INSTALL_DIR
 ```
