@@ -19,8 +19,6 @@ func runTUI(lights []LightConfig) {
 	}
 }
 
-// --- model ---
-
 type tuiLight struct {
 	Name        string
 	IP          string
@@ -47,9 +45,11 @@ type tuiModel struct {
 func newTUIModel(configs []LightConfig) tuiModel {
 	pb := progress.New(progress.WithDefaultGradient())
 	lights := make([]tuiLight, len(configs))
+
 	for i, cfg := range configs {
 		lights[i] = tuiLight{Name: cfg.Name, IP: cfg.IP, Brightness: 20, Temperature: 5000}
 	}
+
 	return tuiModel{
 		Lights:          lights,
 		brightnessBar:   pb,
@@ -64,15 +64,18 @@ func (m tuiModel) Init() tea.Cmd {
 	for i, l := range m.Lights {
 		cmds[i] = cmdFetchStatus(i, l.IP)
 	}
+
 	return tea.Batch(cmds...)
 }
 
 func (m tuiModel) currentSettings(idx int) LightDetail {
 	l := m.Lights[idx]
 	on := 0
+
 	if l.On {
 		on = 1
 	}
+
 	return LightDetail{On: on, Brightness: l.Brightness, Temperature: kelvinToMired(l.Temperature)}
 }
 
@@ -95,11 +98,13 @@ func cmdFetchStatus(index int, ip string) tea.Cmd {
 		c := newController()
 		status, err := c.getLight(ip)
 		var detail LightDetail
+
 		if err == nil && len(status.Lights) > 0 {
 			detail = status.Lights[0]
 		} else if err == nil {
 			err = errors.New("empty status")
 		}
+
 		return msgLightStatus{index: index, detail: detail, err: err}
 	}
 }
@@ -109,16 +114,16 @@ func cmdUpdateLight(index int, ip string, settings LightDetail) tea.Cmd {
 		c := newController()
 		status, err := c.updateLight(ip, settings)
 		var detail LightDetail
+
 		if err == nil && len(status.Lights) > 0 {
 			detail = status.Lights[0]
 		} else if err == nil {
 			err = errors.New("empty status")
 		}
+
 		return msgLightUpdate{index: index, detail: detail, err: err}
 	}
 }
-
-// --- update ---
 
 func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -135,6 +140,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			for i := range m.Lights {
 				cmds[i] = cmdFetchStatus(i, m.Lights[i].IP)
 			}
+
 			return m, tea.Batch(cmds...)
 		case "a", "A":
 			m.GlobalOn = !m.GlobalOn
@@ -145,6 +151,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.Lights[i].On = m.GlobalOn
 				cmds[i] = cmdUpdateLight(i, m.Lights[i].IP, m.currentSettings(i))
 			}
+
 			return m, tea.Batch(cmds...)
 		case "h", "left":
 			if m.Cursor > 0 {
@@ -172,6 +179,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 1:
 				m.Lights[idx].Temperature = min(m.Lights[idx].Temperature+100, 7000)
 			}
+
 			m.pendingRequests++
 			m.status = fmt.Sprintf("Updating %s...", m.Lights[idx].Name)
 			return m, cmdUpdateLight(idx, m.Lights[idx].IP, m.currentSettings(idx))
@@ -183,6 +191,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 1:
 				m.Lights[idx].Temperature = max(m.Lights[idx].Temperature-100, 2900)
 			}
+
 			m.pendingRequests++
 			m.status = fmt.Sprintf("Updating %s...", m.Lights[idx].Name)
 			return m, cmdUpdateLight(idx, m.Lights[idx].IP, m.currentSettings(idx))
@@ -193,6 +202,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = fmt.Errorf("%s: %w", m.Lights[msg.index].Name, msg.err)
 			break
 		}
+
 		m.err = nil
 		m.Lights[msg.index].On = msg.detail.On == 1
 		m.Lights[msg.index].Brightness = msg.detail.Brightness
@@ -207,6 +217,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = fmt.Errorf("%s: %w", m.Lights[msg.index].Name, msg.err)
 			break
 		}
+
 		m.err = nil
 		m.Lights[msg.index].On = msg.detail.On == 1
 		m.Lights[msg.index].Brightness = msg.detail.Brightness
@@ -218,8 +229,6 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 	return m, nil
 }
-
-// --- view ---
 
 func (m tuiModel) View() string {
 	cw := cardContentWidth(m.width)
@@ -242,6 +251,7 @@ func (m tuiModel) View() string {
 	for _, c := range cards[1:] {
 		lightsH += strings.Count(c, "\n") + 1
 	}
+
 	spacer := strings.Repeat("\n", max(m.height-globalH-lightsH-footerH-2, 0))
 
 	return lipgloss.JoinVertical(lipgloss.Left, append(cards, spacer, footer, statusLine)...)
@@ -251,6 +261,7 @@ func cardContentWidth(termWidth int) int {
 	if termWidth > 76 {
 		return termWidth - 4
 	}
+
 	return 72
 }
 
@@ -272,6 +283,7 @@ func renderLightCard(l tuiLight, selected bool, propCursor int, bb, tb progress.
 	if selected {
 		name = "[" + l.Name + "]"
 	}
+
 	ip := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "245", Dark: "240"}).Render(lightHost(l.IP))
 	header := lipgloss.NewStyle().Bold(true).Render(name+"  "+statusColor(l.On)) + "  " + ip
 
@@ -295,6 +307,7 @@ func renderFooter(termWidth int) string {
 	if termWidth > 0 && termWidth < 100 {
 		text = "  h/l  ·  j/k  ·  =/- adjust  ·  enter  ·  a  ·  r  ·  q"
 	}
+
 	return lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "245", Dark: "240"}).Render(text)
 }
 
@@ -302,6 +315,7 @@ func statusColor(on bool) string {
 	if on {
 		return lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "2", Dark: "10"}).Render("ON")
 	}
+
 	return lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "1", Dark: "9"}).Render("OFF")
 }
 
@@ -310,5 +324,6 @@ func lightHost(ip string) string {
 	if err != nil {
 		return ip
 	}
+
 	return host
 }

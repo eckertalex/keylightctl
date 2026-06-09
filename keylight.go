@@ -45,15 +45,18 @@ func (c *controller) getLight(ip string) (*LightStatus, error) {
 		if err != nil {
 			return nil, fmt.Errorf("request failed: %w", err)
 		}
+
 		defer resp.Body.Close()
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("reading response: %w", err)
 		}
+
 		var s LightStatus
 		if err := json.Unmarshal(body, &s); err != nil {
 			return nil, fmt.Errorf("parsing response: %w", err)
 		}
+
 		return &s, nil
 	})
 }
@@ -64,10 +67,12 @@ func (c *controller) updateLight(ip string, settings LightDetail) (*LightStatus,
 		if err != nil {
 			return nil, fmt.Errorf("marshaling request: %w", err)
 		}
+
 		req, err := http.NewRequest(http.MethodPut, lightsURL(ip), bytes.NewBuffer(body))
 		if err != nil {
 			return nil, fmt.Errorf("creating request: %w", err)
 		}
+
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", "application/json")
 
@@ -75,18 +80,22 @@ func (c *controller) updateLight(ip string, settings LightDetail) (*LightStatus,
 		if err != nil {
 			return nil, fmt.Errorf("request failed: %w", err)
 		}
+
 		defer resp.Body.Close()
 		respBody, err := io.ReadAll(resp.Body)
 		if resp.StatusCode != http.StatusOK {
 			return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(respBody))
 		}
+
 		if err != nil {
 			return nil, fmt.Errorf("reading response: %w", err)
 		}
+
 		var s LightStatus
 		if err := json.Unmarshal(respBody, &s); err != nil {
 			return nil, fmt.Errorf("parsing response: %w", err)
 		}
+
 		return &s, nil
 	})
 }
@@ -99,9 +108,11 @@ func retryHTTP(attempts int, delay time.Duration, f func() (*LightStatus, error)
 		} else {
 			lastErr = err
 		}
+
 		time.Sleep(delay)
 		delay *= 2
 	}
+
 	return nil, fmt.Errorf("after %d attempts: %w", attempts, lastErr)
 }
 

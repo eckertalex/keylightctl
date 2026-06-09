@@ -72,12 +72,15 @@ func loadConfig(path string) ([]LightConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var cfg struct {
 		Lights []LightConfig `json:"lights"`
 	}
+
 	if err := json.Unmarshal(data, &cfg); err != nil {
 		return nil, err
 	}
+
 	return cfg.Lights, nil
 }
 
@@ -106,6 +109,7 @@ func cmdStatus(lights []LightConfig, args []string) {
 	if !ok {
 		return
 	}
+
 	ctl := newController()
 	runOp(targets, ctl.getLight, "Status")
 }
@@ -126,13 +130,16 @@ func cmdOn(lights []LightConfig, args []string) {
 			fmt.Fprintln(os.Stderr, "invalid brightness:", err)
 			return
 		}
+
 		settings.Brightness = *brightness
 	}
+
 	if *temperature != -1 {
 		if err := validateTemperature(*temperature); err != nil {
 			fmt.Fprintln(os.Stderr, "invalid temperature:", err)
 			return
 		}
+
 		settings.Temperature = kelvinToMired(*temperature)
 	}
 
@@ -140,6 +147,7 @@ func cmdOn(lights []LightConfig, args []string) {
 	if !ok {
 		return
 	}
+
 	ctl := newController()
 	runOp(targets, func(ip string) (*LightStatus, error) {
 		return ctl.updateLight(ip, settings)
@@ -156,6 +164,7 @@ func cmdOff(lights []LightConfig, args []string) {
 	if !ok {
 		return
 	}
+
 	ctl := newController()
 	runOp(targets, func(ip string) (*LightStatus, error) {
 		return ctl.updateLight(ip, LightDetail{On: 0})
@@ -166,15 +175,18 @@ func resolveLights(lights []LightConfig, name string) ([]LightConfig, bool) {
 	if name == "" {
 		return lights, true
 	}
+
 	for i := range lights {
 		if lights[i].Name == name {
 			return []LightConfig{lights[i]}, true
 		}
 	}
+
 	names := make([]string, len(lights))
 	for i, l := range lights {
 		names[i] = l.Name
 	}
+
 	fmt.Fprintf(os.Stderr, "light %q not found; available: %s\n", name, strings.Join(names, ", "))
 	return nil, false
 }
@@ -199,6 +211,7 @@ func runOp(lights []LightConfig, op func(string) (*LightStatus, error), opName s
 			results <- lightResult{name: l.Name, status: status, err: err}
 		}(l)
 	}
+
 	go func() {
 		wg.Wait()
 		close(results)
@@ -210,6 +223,7 @@ func runOp(lights []LightConfig, op func(string) (*LightStatus, error), opName s
 			fmt.Printf("\r%s of light %q: error: %s\n", opName, r.name, classifyError(r.err))
 			continue
 		}
+
 		for _, l := range r.status.Lights {
 			fmt.Printf("\rStatus of light %q:\n", r.name)
 			fmt.Printf("  Power:       %s\n", formatOnOff(l.On))
@@ -239,13 +253,15 @@ func classifyError(err error) string {
 	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
 		return "timeout while connecting"
 	}
+
 	if errors.Is(err, io.EOF) {
 		return "connection closed unexpectedly"
 	}
-	var netErr *net.OpError
-	if errors.As(err, &netErr) {
+
+	if errors.As(err, new(*net.OpError)) {
 		return "failed to connect"
 	}
+
 	return err.Error()
 }
 
@@ -253,6 +269,7 @@ func validateBrightness(n int) error {
 	if n < 0 || n > 100 {
 		return fmt.Errorf("must be between 0 and 100")
 	}
+
 	return nil
 }
 
@@ -260,6 +277,7 @@ func validateTemperature(n int) error {
 	if n < 2900 || n > 7000 {
 		return fmt.Errorf("must be between 2900K and 7000K")
 	}
+
 	return nil
 }
 
@@ -267,5 +285,6 @@ func formatOnOff(on int) string {
 	if on == 1 {
 		return "ON"
 	}
+
 	return "OFF"
 }
