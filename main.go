@@ -49,7 +49,7 @@ func main() {
 
 	args := global.Args()
 	if len(args) == 0 {
-		runTUI(lights)
+		cmdStatus(lights, nil)
 		return
 	}
 
@@ -92,7 +92,7 @@ Commands:
   on      [-b 0-100] [-t 2900-7000] [-l NAME]
   off     [-l NAME]
 
-No command: launch interactive TUI.
+No command: same as status.
 
 Global flags:
 `)
