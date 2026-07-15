@@ -1,2 +1,4 @@
-bin/
-tmp/
+/klair
+/klair_debug
+/klair_tests
+*.dSYM

@@ -1,80 +1,40 @@
-BIN_NAME    ?= keylightctl
-GO          ?= go
-INSTALL_DIR ?= $(HOME)/.local/bin
+TARGET        = klair
+CC            = cc
+CFLAGS        = -std=c11 -Wall -Wextra -Wpedantic
+DEBUG_FLAGS   = -Og -g -fsanitize=address -fsanitize=undefined
+RELEASE_FLAGS = -O2 -DNDEBUG
+INSTALL_DIR  ?= $(HOME)/.local/bin
 
-SRC_DIR   := .
-BUILD_DIR := ./bin
-TMP_DIR   := ./tmp
+VERSION    = $(shell git describe --tags --always 2>/dev/null || echo v0.0.0)
+VERSIONDEF = -DKLAIR_VERSION='"$(VERSION)"'
 
-VERSION      := $(shell git describe --abbrev=0 --tags --always)
-LDFLAGS      := -X main.Version=$(VERSION)
-PROD_LDFLAGS := -s -w $(LDFLAGS)
-BIN          := $(BUILD_DIR)/$(BIN_NAME)
+all: release
 
-## help: print this help message
-.PHONY: help
-help:
-	@echo "Usage:"
-	@sed -n "s/^##//p" ${MAKEFILE_LIST} | column -t -s ":" | sed -e "s/^/ /"
+release: $(TARGET)
 
-## audit: run quality control checks
-.PHONY: audit
-audit: test
-	$(GO) mod tidy -diff
-	$(GO) mod verify
-	@test -z "$$(gofmt -l .)"
-	$(GO) vet ./...
+$(TARGET): klair.c
+	$(CC) $(CFLAGS) $(RELEASE_FLAGS) $(VERSIONDEF) -o $@ klair.c
 
-## test: run all tests
-.PHONY: test
-test:
-	$(GO) test -v -race -buildvcs ./...
+debug: klair.c
+	$(CC) $(CFLAGS) $(DEBUG_FLAGS) $(VERSIONDEF) -o $(TARGET)_debug klair.c
 
-## test/cover: run tests and open the HTML coverage report
-.PHONY: test/cover
-test/cover:
-	@mkdir -p $(TMP_DIR)
-	$(GO) test -v -race -buildvcs -coverprofile=$(TMP_DIR)/coverage.out ./...
-	$(GO) tool cover -html=$(TMP_DIR)/coverage.out
+# tests.c #includes klair.c; build WITHOUT -DNDEBUG so assert() stays live,
+# and with sanitizers to catch memory bugs in the socket/parse code.
+test: tests.c klair.c
+	$(CC) $(CFLAGS) $(DEBUG_FLAGS) -o $(TARGET)_tests tests.c
+	./$(TARGET)_tests
 
-## tidy: tidy modfiles and modernize and format .go files
-.PHONY: tidy
-tidy:
-	$(GO) mod tidy -v
-	$(GO) fix ./...
-	$(GO) fmt ./...
+run: release
+	./$(TARGET)
 
-## build: build the application
-.PHONY: build
-build:
-	@$(GO) build -v -ldflags "$(LDFLAGS)" -o=$(BIN) $(SRC_DIR)
+install: release
+	mkdir -p $(INSTALL_DIR)
+	cp $(TARGET) $(INSTALL_DIR)/$(TARGET)
 
-## build/prod: build an optimized, stripped, static production binary
-.PHONY: build/prod
-build/prod:
-	@CGO_ENABLED=0 $(GO) build -trimpath -ldflags "$(PROD_LDFLAGS)" -o=$(BIN) $(SRC_DIR)
-
-## run: run the bin
-.PHONY: run
-run: build
-	@$(BIN)
-
-## install: build and install to INSTALL_DIR (default ~/.local/bin)
-.PHONY: install
-install: build/prod
-	@mkdir -p $(INSTALL_DIR)
-	@cp $(BIN) $(INSTALL_DIR)/$(BIN_NAME)
-	@echo "Installed $(BIN_NAME) to $(INSTALL_DIR)/$(BIN_NAME)"
-
-## uninstall: remove the installed binary from INSTALL_DIR
-.PHONY: uninstall
 uninstall:
-	@rm -f $(INSTALL_DIR)/$(BIN_NAME)
-	@echo "Removed $(INSTALL_DIR)/$(BIN_NAME)"
+	rm -f $(INSTALL_DIR)/$(TARGET)
 
-## clean: remove build artifacts
-.PHONY: clean
 clean:
-	rm -rvI $(BUILD_DIR) $(TMP_DIR)
+	rm -rf $(TARGET) $(TARGET)_debug $(TARGET)_tests *.dSYM
 
-# vim: set tabstop=4 shiftwidth=4 noexpandtab
+.PHONY: all release debug test run install uninstall clean
