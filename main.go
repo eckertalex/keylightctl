@@ -14,18 +14,50 @@ import (
 	"time"
 )
 
-var Version = "v0.0.0"
+const (
+	BUILD_NAME    = "keylightctl"
+	BUILD_VERSION = "0.4.0"
+)
+
+var (
+	BUILD_GIT_HASH = ""
+	BUILD_DEBUG    = "true"
+)
+
+// keylightctl version 0.4.0+8b30b7a-dirty (debug)
+func buildVersionFull() string {
+	s := BUILD_NAME + " version " + BUILD_VERSION
+	if BUILD_GIT_HASH != "" {
+		s += "+" + BUILD_GIT_HASH
+	}
+	if BUILD_DEBUG == "true" {
+		s += " (debug)"
+	}
+	return s
+}
 
 func main() {
 	global := flag.NewFlagSet("keylightctl", flag.ExitOnError)
 	configPath := global.String("config", "", "config file (default $HOME/.keylightctl.json)")
-	printVersion := global.Bool("version", false, "print version and exit")
 	global.Usage = func() { printUsage(global) }
 	global.Parse(os.Args[1:])
 
-	if *printVersion {
-		fmt.Println(Version)
-		return
+	args := global.Args()
+	if len(args) > 0 {
+		switch args[0] {
+		case "help":
+			global.SetOutput(os.Stdout)
+			printUsage(global)
+			return
+		case "version":
+			fmt.Println(buildVersionFull())
+			return
+		case "status", "on", "off":
+		default:
+			fmt.Fprintf(os.Stderr, "unknown command: %s\n\n", args[0])
+			printUsage(global)
+			os.Exit(2)
+		}
 	}
 
 	if *configPath == "" {
@@ -47,7 +79,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	args := global.Args()
 	if len(args) == 0 {
 		runTUI(lights)
 		return
@@ -60,10 +91,6 @@ func main() {
 		cmdOn(lights, args[1:])
 	case "off":
 		cmdOff(lights, args[1:])
-	default:
-		fmt.Fprintf(os.Stderr, "unknown command: %s\n\n", args[0])
-		printUsage(global)
-		os.Exit(1)
 	}
 }
 
@@ -85,12 +112,14 @@ func loadConfig(path string) ([]LightConfig, error) {
 }
 
 func printUsage(fs *flag.FlagSet) {
-	fmt.Fprintf(fs.Output(), `Usage: keylightctl [--config PATH] [--version] <command> [flags]
+	fmt.Fprintf(fs.Output(), `Usage: keylightctl [-config PATH] [command] [flags]
 
 Commands:
-  status  [-l NAME]
-  on      [-b 0-100] [-t 2900-7000] [-l NAME]
-  off     [-l NAME]
+  status   [-l NAME]
+  on       [-b 0-100] [-t 2900-7000] [-l NAME]
+  off      [-l NAME]
+  help
+  version
 
 No command: launch interactive TUI.
 

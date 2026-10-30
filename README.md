@@ -19,7 +19,8 @@ Lights are read from `~/.config/keylightctl/config.json` (respects `$XDG_CONFIG_
 keylightctl status           # show each light's status
 keylightctl on               # turn on (-b brightness, -t temperature, -l light)
 keylightctl off              # turn off (-l light)
-keylightctl -version         # print version
+keylightctl help             # print usage
+keylightctl version          # print version
 ```
 
 Run `keylightctl` with no arguments for the interactive TUI:
@@ -36,10 +37,24 @@ Run `keylightctl` with no arguments for the interactive TUI:
 
 ![TUI screenshot](assets/keylightctl.png)
 
-Build and install with make:
+## Build
+
+`build.sh` builds into `build/`.
 
 ```sh
-make build        # ./bin/keylightctl
-make install      # to ~/.local/bin (override with INSTALL_DIR=)
-make uninstall    # remove from INSTALL_DIR
+./build.sh                  # debug, build/keylightctl
+./build.sh release          # optimized and stripped
+./build/keylightctl version    # run what you built
+./build.sh test
 ```
+
+Needs: Go from `.tool-versions`.
+
+## Install
+
+```sh
+./build.sh release
+cp build/keylightctl ~/.local/bin/
+```
+
+`~/.local/bin` needs to be on your `PATH`. To uninstall, delete the binary.
